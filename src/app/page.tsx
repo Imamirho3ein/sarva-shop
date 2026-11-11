@@ -44,7 +44,8 @@ export default async function HomePage() {
   let data: Awaited<ReturnType<typeof getHomeData>> | null = null;
   try {
     data = await getHomeData();
-  } catch {
+  } catch (error) {
+    console.error("[home] getHomeData failed:", error);
     data = null;
   }
 
