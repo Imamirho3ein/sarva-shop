@@ -1,0 +1,527 @@
+// ---------------------------------------------------------------------------
+// Sarva Shop — دیتامدل اصلی فروشگاه
+// PostgreSQL + Prisma
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --------------------------------- کاربران ---------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  // کیف پول
+  walletBalance Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses   Address[]
+  reviews     Review[]
+  questions   Question[]
+  orders      Order[]
+  wishlist    WishlistItem[]
+  favorites   FavoriteItem[]
+  notifications Notification[]
+  walletTx    WalletTransaction[]
+
+  @@index([role])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String  @default("خانه") // خانه / کار / ...
+  receiverName String
+  receiverPhone String
+  province     String
+  city         String
+  postalCode   String
+  address      String
+  isDefault    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// --------------------------------- کاتالوگ ---------------------------------
+
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  image       String?
+  icon        String? // نام آیکون lucide
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+  order       Int     @default(0)
+  isActive    Boolean @default(true)
+  isPopular   Boolean @default(false) // دسته‌بندی‌های محبوب صفحه اصلی
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([parentId])
+  @@index([slug])
+}
+
+model Brand {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  logo        String?
+  country     String?
+  description String?
+  isPopular   Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  sku         String  @unique
+  description String
+  shortDesc   String?
+
+  price          Int // قیمت اصلی (تومان)
+  discountPrice  Int? // قیمت پس از تخفیف
+  stock         Int     @default(0)
+  reservedStock Int     @default(0)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brandId    String?
+  brand      Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  // آمار
+  rating      Float   @default(0)
+  reviewCount Int     @default(0)
+  soldCount   Int     @default(0)
+  viewCount   Int     @default(0)
+  favoriteCount Int   @default(0)
+
+  isFeatured  Boolean @default(false)
+  isNew       Boolean @default(false)
+  isSpecial   Boolean @default(false) // پیشنهاد شگفت‌انگیز
+  specialEndsAt DateTime?
+  warranty    String?
+  weight      Int? // گرم
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images    ProductImage[]
+  variants  ProductVariant[]
+  attrs     ProductAttribute[]
+  reviews   Review[]
+  questions Question[]
+  orderItems OrderItem[]
+  favorites FavoriteItem[]
+  wishlists  WishlistItem[]
+  related   ProductRelation[] @relation("RelatedFrom")
+  relatedTo ProductRelation[] @relation("RelatedTo")
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([slug])
+  @@index([isFeatured])
+  @@index([createdAt])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  order     Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  name       String // مثال: "قرمز — ۱۲۸ گیگ"
+  sku        String  @unique
+  price      Int? // قیمت اختصاصی (در غیر این صورت قیمت محصول)
+  stock      Int     @default(0)
+  colorName  String?
+  colorHex   String?
+  attributes Json? // { "حافظه": "۱۲۸ گیگ", "رم": "۸ گیگ" }
+  order      Int     @default(0)
+  isActive   Boolean @default(true)
+
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+model ProductAttribute {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group     String // مثال: "مشخصات فنی"
+  key       String // مثال: "پردازنده"
+  value     String
+  order     Int     @default(0)
+
+  @@index([productId])
+}
+
+model ProductRelation {
+  id            String  @id @default(cuid())
+  productId     String
+  relatedProductId String
+  product       Product @relation("RelatedFrom", fields: [productId], references: [id], onDelete: Cascade)
+  related       Product @relation("RelatedTo", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+  @@index([relatedProductId])
+}
+
+// --------------------------------- نظرات -----------------------------------
+
+model Review {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating    Int // 1..5
+  title     String
+  body      String
+  isApproved Boolean @default(true)
+  isRecommended Boolean? // آیا خرید را توصیه می‌کنید؟
+  pros      String?
+  cons      String?
+  reply     String? // پاسخ مدیر
+  replyAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, userId])
+  @@index([productId, isApproved])
+}
+
+model Question {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  body      String
+  answer    String?
+  answerAt  DateTime?
+  isApproved Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, isApproved])
+}
+
+// --------------------------------- سفارش‌ها --------------------------------
+
+enum OrderStatus {
+  PENDING // در انتظار پرداخت
+  PAID // پرداخت شده
+  PROCESSING // در حال آماده‌سازی
+  SHIPPED // ارسال شده
+  DELIVERED // تحویل داده شده
+  CANCELED // لغو شده
+  REFUNDED // بازپرداخت شده
+}
+
+enum ShippingMethod {
+  POST // پست پیشتاز
+  COURIER // پیک تهران
+  EXPRESS // فوری
+  PICKUP // تحویل حضوری
+}
+
+enum PaymentMethod {
+  ONLINE // درگاه آنلاین
+  WALLET // کیف پول
+  COD // پرداخت در محل
+}
+
+model Order {
+  id          String  @id @default(cuid())
+  orderNumber String  @unique
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  status      OrderStatus @default(PENDING)
+  paymentMethod PaymentMethod @default(ONLINE)
+  shippingMethod ShippingMethod @default(POST)
+
+  // مبالغ (تومان)
+  subtotal     Int @default(0)
+  discount     Int @default(0)
+  shippingFee  Int @default(0)
+  total        Int @default(0)
+  couponCode   String?
+  couponId     String?
+  coupon       Coupon? @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  // اسنپ‌شات آدرس
+  addressLabel     String?
+  receiverName     String?
+  receiverPhone    String?
+  province         String?
+  city             String?
+  postalCode       String?
+  addressLine      String?
+
+  trackingCode     String?
+  note             String?
+  paidAt           DateTime?
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  canceledAt       DateTime?
+  cancelReason     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     OrderItem[]
+  payment   PaymentTransaction?
+  timeline  OrderEvent[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  name      String // اسنپ‌شات
+  image     String?
+  sku       String?
+  unitPrice Int
+  quantity  Int
+  total     Int
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status  String
+  title   String
+  note    String?
+  actor   String @default("system") // system | user | admin
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+model PaymentTransaction {
+  id        String  @id @default(cuid())
+  orderId   String  @unique
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  gateway   String  @default("sandbox")
+  authority String? @unique
+  refId     String?
+  amount    Int
+  status    String  @default("PENDING") // PENDING | SUCCESS | FAILED
+  cardPan   String?
+  message   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+// --------------------------------- علاقه‌مندی‌ها ----------------------------
+
+model WishlistItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model FavoriteItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// --------------------------------- کوپن و بنر -----------------------------
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+model Coupon {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  type        CouponType @default(PERCENT)
+  value       Int // درصد یا مبلغ تومان
+  minOrder    Int        @default(0)
+  maxDiscount Int?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  perUserLimit Int       @default(1)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean    @default(true)
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Banner {
+  id       String  @id @default(cuid())
+  title    String
+  subtitle String?
+  image    String
+  link     String?
+  badge    String? // مثال: "۲۰٪ تخفیف"
+  theme    String  @default("light") // light | dark | brand | accent
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BannerSlot {
+  id    String @id @default(cuid())
+  key   String @unique // main | strip | off
+  title String
+  order Int    @default(0)
+}
+
+// --------------------------------- اعلان و کیف پول ------------------------
+
+model Notification {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title   String
+  body    String
+  link    String?
+  type    String  @default("info") // info | order | promo | system
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+enum WalletTxType {
+  DEPOSIT
+  WITHDRAW
+  PURCHASE
+  REFUND
+  GIFT
+}
+
+model WalletTransaction {
+  id     String       @id @default(cuid())
+  userId String
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        WalletTxType
+  amount      Int // مثبت: واریز، منفی: برداشت
+  balanceAfter Int
+  description String
+  orderId     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ---------------------------- ارتباط با مشتری ----------------------------
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  source    String?  @default("footer")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model ContactMessage {
+  id      String  @id @default(cuid())
+  name    String
+  email   String
+  phone   String?
+  subject String  @default("general")
+  message String
+  isRead  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([isRead, createdAt])
+}

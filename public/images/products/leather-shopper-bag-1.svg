@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffedd5"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="52%">
+      <stop offset="0" stop-color="#f97316" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="800" fill="url(#bg)"/>
+  <circle cx="400" cy="360" r="300" fill="url(#glow)"/>
+  <g opacity="0.35">
+    <circle cx="140" cy="150" r="54" fill="#f97316" opacity="0.14"/>
+    <circle cx="676" cy="206" r="26" fill="#c2410c" opacity="0.2"/>
+    <circle cx="650" cy="646" r="70" fill="#f97316" opacity="0.1"/>
+    <circle cx="132" cy="612" r="18" fill="#c2410c" opacity="0.22"/>
+  </g>
+  <g filter="none">
+    <g transform="rotate(-3 400 380)">
+      <path d="M330 214l70 44 70-44 60 34-26 82 34 42-38 40-30-32v186a26 26 0 0 1-26 26h-88a26 26 0 0 1-26-26V380l-30 32-38-40 34-42-26-82z" fill="#fff" opacity="0.94"/>
+      <path d="M400 258v330" stroke="#ffedd5" stroke-width="3" opacity="0.5" stroke-dasharray="8 10"/>
+      <circle cx="400" cy="286" r="18" fill="#f97316" opacity="0.35"/>
+    </g></g>
+  <ellipse cx="400" cy="672" rx="190" ry="26" fill="#431407" opacity="0.06"/>
+</svg>

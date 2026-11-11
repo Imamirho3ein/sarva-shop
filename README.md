@@ -1,36 +1,412 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# سَروا — فروشگاه اینترنتی فارسی
 
-## Getting Started
+فروشگاه اینترنتی کامل و آماده‌ی اجرا با رابط کاربری راست‌به‌چپ (RTL)، طراحی مدرن و معماری قابل توسعه. این پروژه با **Next.js 16 (App Router)**، **React 19**، **TypeScript**، **Tailwind CSS v4**، **Prisma 7** و **PostgreSQL** ساخته شده است.
 
-First, run the development server:
+> این پروژه یک نمونه‌ی مستقل است و هیچ نشان تجاری، لوگو یا تصویر متعلق به فروشگاه‌های دیگر در آن استفاده نشده است. همه‌ی تصاویر محصولات، برندها و بنرها فایل‌های SVG محلی و تولیدشده برای همین پروژه هستند.
+
+---
+
+## تصاویر پروژه
+
+<div dir="rtl">
+
+| فروشگاه | |
+| --- | --- |
+| ![صفحه‌ی اصلی](docs/screenshots/01-home.jpg) | ![لیست محصولات](docs/screenshots/02-products.jpg) |
+| **صفحه‌ی اصلی** — بنرها، دسته‌بندی‌ها و پیشنهادها | **لیست محصولات** — فیلتر، جستجو و مرتب‌سازی |
+| ![جزئیات محصول](docs/screenshots/03-product.jpg) | ![سبد خرید](docs/screenshots/04-cart.jpg) |
+| **جزئیات محصول** — گالری، تنوع، نظرات و محصولات مرتبط | **سبد خرید** — مدیریت اقلام و کد تخفیف |
+| ![تسویه حساب](docs/screenshots/05-checkout.jpg) | ![ورود](docs/screenshots/06-login.jpg) |
+| **تسویه حساب چهارمرحله‌ای** | **ورود و ثبت‌نام** |
+| ![سفارش‌های من](docs/screenshots/07-account-orders.jpg) | ![داشبورد مدیریت](docs/screenshots/08-admin-dashboard.jpg) |
+| **پنل کاربری** — سفارش‌ها و پیگیری | **داشبورد مدیریت** — آمار فروش و نمودارها |
+
+| پنل مدیریت | |
+| --- | --- |
+| ![مدیریت سفارش‌ها](docs/screenshots/09-admin-orders.jpg) | ![مدیریت محصولات](docs/screenshots/10-admin-products.jpg) |
+| **مدیریت سفارش‌ها** — تغییر وضعیت و جزئیات | **مدیریت محصولات** — CRUD کامل |
+| ![گزارش‌ها](docs/screenshots/11-admin-reports.jpg) | ![پیام‌ها](docs/screenshots/12-admin-messages.jpg) |
+| **گزارش‌ها** — فروش، پرفروش‌ها و مشتریان | **پیام‌ها** — تماس با ما و خبرنامه |
+
+</div>
+
+> تصاویر با داده‌ی نمونه‌ی همین مخزن گرفته شده‌اند. برای مشاهده‌ی نسخه‌ی تمام‌اندازه، فایل‌های پوشه‌ی [`docs/screenshots`](docs/screenshots) را باز کنید.
+
+---
+
+## فهرست
+
+- [تصاویر پروژه](#تصاویر-پروژه)
+- [امکانات](#امکانات)
+- [پیش‌نیازها](#پیشنیازها)
+- [راه‌اندازی سریع](#راهاندازی-سریع)
+- [متغیرهای محیطی](#متغیرهای-محیطی)
+- [دیتابیس](#دیتابیس)
+- [حساب‌های نمونه و کدهای تخفیف](#حسابهای-نمونه-و-کدهای-تخفیف)
+- [اسکریپت‌ها](#اسکریپتها)
+- [نقشه‌ی مسیرها](#نقشهی-مسیرها)
+- [معماری پروژه](#معماری-پروژه)
+- [جریان سفارش و پرداخت](#جریان-سفارش-و-پرداخت)
+- [امنیت](#امنیت)
+- [توسعه‌ی بیشتر](#توسعهی-بیشتر)
+- [چک‌لیست انتشار](#چکلیست-انتشار)
+- [محدودیت‌های شناخته‌شده](#محدودیتهای-شناختهشده)
+
+---
+
+## امکانات
+
+### فروشگاه (سمت مشتری)
+
+- **صفحه اصلی**: هدر چسبان، جستجوی هوشمند با پیشنهاد لحظه‌ای، مگامنوی دسته‌بندی، اسلایدر بنر، دسته‌بندی‌های محبوب، پرفروش‌ها، پیشنهادهای ویژه با تایمر شمارش معکوس، جدیدترین‌ها، برندها و فوتر کامل.
+- **فهرست محصولات** (`/products`، `/category/[slug]`، `/brands/[slug]`، `/search`):
+  - فیلتر قیمت، برند، امتیاز، موجودی، تخفیف‌دار و ویژگی‌های محصول
+  - مرتب‌سازی: جدیدترین، قدیمی‌ترین، ارزان‌ترین، گران‌ترین، محبوب‌ترین، پرفروش‌ترین، بالاترین امتیاز
+  - صفحه‌بندی و چیدمان کاملاً واکنش‌گرا
+- **صفحه محصول**:
+  - گالری تصاویر با بزرگ‌نمایی
+  - قیمت اصلی/تخفیف‌دار، درصد تخفیف، وضعیت موجودی
+  - انتخاب تنوع/رنگ، تعداد، افزودن به سبد، علاقه‌مندی و مقایسه
+  - مشخصات فنی، توضیحات کامل، نظرات و امتیاز، پرسش و پاسخ
+  - محصولات مشابه و مرتبط، داده‌ی ساختاریافته JSON-LD
+- **سبد خرید**: تغییر تعداد، حذف، محاسبه‌ی جمع، تخفیف، هزینه ارسال و مبلغ نهایی + اعمال کد تخفیف.
+- **تسویه حساب چندمرحله‌ای**: ورود/ثبت‌نام، آدرس، روش ارسال، روش پرداخت، بازبینی سفارش، پرداخت و صفحه نتیجه.
+- **پنل کاربری**: پیشخوان، سفارش‌ها و جزئیات سفارش (لغو/پیگیری)، آدرس‌ها، علاقه‌مندی‌ها، نظرات من، اعلان‌ها، کیف پول، اطلاعات حساب و خروج.
+- **مقایسه محصولات** و **علاقه‌مندی‌ها** با ذخیره‌سازی محلی (Zustand + localStorage).
+- **صفحات محتوایی**: درباره ما، تماس با ما (فرم متصل به دیتابیس)، پرسش‌های متداول، روش‌های ارسال، شرایط بازگشت، قوانین، حریم خصوصی، سلب مسئولیت، نقشه سایت، فرصت‌های شغلی، همکاری با ما و همکاری در فروش.
+
+### پنل مدیریت (`/admin`)
+
+- **داشبورد**: KPIهای فروش، نمودار ۷ روزه، سفارش‌های اخیر، توزیع وضعیت، موجودی کم، پرفروش‌ها و کاربران جدید.
+- **محصولات**: ایجاد، ویرایش و حذف، مدیریت تصاویر، تنوع‌ها، ویژگی‌ها و ارتباط محصولات.
+- **دسته‌بندی‌ها و برندها**: CRUD کامل.
+- **انبار**: ویرایش درون‌خطی موجودی، موجودی رزروشده، قیمت و تخفیف.
+- **سفارش‌ها**: جستجو، فیلتر وضعیت/تاریخ، صفحه‌بندی، جزئیات کامل و تغییر وضعیت با قواعد مجاز.
+- **کاربران**: جستجو، تغییر نقش، فعال/غیرفعال‌سازی (با محافظت از حساب خودِ ادمین).
+- **کدهای تخفیف**: درصدی/مبلغ ثابت، سقف تخفیف، حداقل خرید، محدودیت استفاده.
+- **بنرها**: مدیریت اسلایدر و جایگاه‌های بنر.
+- **نظرات و پرسش‌ها**: تأیید/رد، پاسخ، ویرایش پاسخ و حذف.
+- **پیام‌ها و خبرنامه**: صندوق پیام‌های فرم تماس + فهرست مشترکان خبرنامه.
+- **گزارش فروش**: درآمد ۶ ماهه، میانگین سبد، تخفیف‌ها، پرفروش‌ها، دسته‌بندی‌ها، برندها، روش‌های پرداخت و استفاده از کدهای تخفیف.
+
+---
+
+## پیش‌نیازها
+
+- **Node.js** نسخه‌ی ۲۰ یا بالاتر
+- **PostgreSQL** ۱۶ (یا Docker برای اجرای آسان)
+- npm (یا pnpm/yarn)
+
+---
+
+## راه‌اندازی سریع
 
 ```bash
+# 1) نصب وابستگی‌ها
+npm install
+
+# 2) ساخت فایل محیطی
+copy .env.example .env      # Windows
+# cp .env.example .env      # macOS / Linux
+
+# 3) بالا آوردن دیتابیس (یکی از دو روش)
+npm run db:up               # روش پیشنهادی: Docker
+# یا
+npm run db:local            # PostgreSQL تعبیه‌شده (بدون Docker)
+
+# 4) ساخت جدول‌ها و داده‌ی نمونه
+npm run setup
+
+# 5) اجرای محیط توسعه
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+سپس مرورگر را روی [http://localhost:3000](http://localhost:3000) باز کنید.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### اجرای نسخه‌ی تولید
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+> نکته: `db:local` یک ترمینال را اشغال می‌کند؛ در ترمینال دیگری دستورات Prisma و اجرای اپ را انجام دهید.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## متغیرهای محیطی
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+فایل `.env.example` را کپی و مقادیر را تنظیم کنید:
 
-## Deploy on Vercel
+| متغیر | توضیح | پیش‌فرض |
+| --- | --- | --- |
+| `DATABASE_URL` | رشته اتصال PostgreSQL | `postgresql://sarva:sarva_secret@localhost:5432/sarva_shop?schema=public` |
+| `DIRECT_DATABASE_URL` | اتصال مستقیم (برای ابزارها/مهاجرت) | همان `DATABASE_URL` |
+| `AUTH_SECRET` | کلید امضای JWT — **در تولید الزامی و تصادفی** | مقدار توسعه |
+| `SESSION_COOKIE_NAME` | نام کوکی نشست | `sarva_session` |
+| `SESSION_MAX_AGE` | عمر نشست به ثانیه | `2592000` (۳۰ روز) |
+| `SEED_ADMIN_EMAIL` | ایمیل ادمین اولیه برای seed | `admin@sarva.shop` |
+| `SEED_ADMIN_PASSWORD` | رمز ادمین اولیه برای seed | `Admin@12345` |
+| `NEXT_PUBLIC_SITE_NAME` | نام نمایشی فروشگاه | `سَروا` |
+| `NEXT_PUBLIC_SITE_URL` | آدرس کامل سایت (SEO و sitemap) | `http://localhost:3000` |
+| `PG_PORT` | پورت دیتابیس تعبیه‌شده | `5432` |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## دیتابیس
+
+### روش ۱ — Docker (پیشنهادی)
+
+```bash
+npm run db:up      # docker compose up -d
+npm run db:down    # توقف
+```
+
+سرویس `postgres:16-alpine` با کاربر `sarva`، رمز `sarva_secret` و دیتابیس `sarva_shop` روی پورت `5432` بالا می‌آید.
+
+### روش ۲ — PostgreSQL تعبیه‌شده (بدون Docker)
+
+برای محیط‌هایی که Docker در دسترس نیست:
+
+```bash
+npm run db:local
+```
+
+این اسکریپت یک خوشه‌ی واقعی PostgreSQL را در پوشه‌ی `.pgdata` راه‌اندازی و روی پورت `5432` اجرا می‌کند. داده‌ها بین اجراها حفظ می‌شوند.
+
+### دستورات Prisma
+
+```bash
+npm run db:generate   # تولید Prisma Client
+npm run db:push       # همگام‌سازی schema با دیتابیس
+npm run db:migrate    # ساخت مهاجرت (محیط توسعه)
+npm run db:seed       # داده‌ی نمونه
+npm run db:studio     # Prisma Studio
+npm run db:reset      # بازنشانی کامل + seed
+```
+
+> در Prisma 7، آدرس دیتابیس در `prisma.config.ts` خوانده می‌شود و کلاینت با `@prisma/adapter-pg` ساخته می‌شود.
+
+---
+
+## حساب‌های نمونه و کدهای تخفیف
+
+پس از اجرای `npm run setup`:
+
+| نقش | ایمیل | رمز |
+| --- | --- | --- |
+| مدیر | `admin@sarva.shop` | `Admin@12345` |
+| کاربر | `sara@example.com` | `User@12345` |
+| کاربر | `ali@example.com` | `User@12345` |
+| کاربر | `maryam@example.com` | `User@12345` |
+| کاربر | `reza@example.com` | `User@12345` |
+
+کدهای تخفیف نمونه:
+
+| کد | توضیح |
+| --- | --- |
+| `SARVA10` | ۱۰٪ تخفیف |
+| `WELCOME` | تخفیف خوش‌آمدگویی |
+| `DIGITAL15` | تخفیف دسته‌ی دیجیتال |
+| `FREESHIP` | ارسال رایگان |
+
+> رمز ادمین از `SEED_ADMIN_PASSWORD` خوانده می‌شود؛ در محیط واقعی حتماً آن را تغییر دهید.
+
+---
+
+## اسکریپت‌ها
+
+| دستور | کار |
+| --- | --- |
+| `npm run dev` | اجرای توسعه (Turbopack) |
+| `npm run build` | ساخت نسخه‌ی تولید |
+| `npm start` | اجرای نسخه‌ی ساخته‌شده |
+| `npm run lint` | اجرای ESLint |
+| `npm run typecheck` | بررسی نوع‌ها با TypeScript |
+| `npm run setup` | generate + push + seed |
+| `npm run db:up` / `db:down` | مدیریت Docker Compose |
+| `npm run db:local` | PostgreSQL تعبیه‌شده |
+| `npm run db:seed` | داده‌ی نمونه |
+| `npm run db:studio` | Prisma Studio |
+
+---
+
+## نقشه‌ی مسیرها
+
+### صفحات عمومی
+
+| مسیر | توضیح |
+| --- | --- |
+| `/` | صفحه اصلی |
+| `/products` | همه محصولات با فیلتر و مرتب‌سازی |
+| `/category/[slug]` | دسته‌بندی (با زیردسته‌ها) |
+| `/brands` و `/brands/[slug]` | برندها |
+| `/product/[slug]` | جزئیات محصول |
+| `/search?q=` | جستجو |
+| `/special-offers` | پیشنهادهای ویژه |
+| `/compare` | مقایسه محصولات |
+| `/cart` | سبد خرید |
+| `/checkout` | تسویه حساب چندمرحله‌ای |
+| `/checkout/payment/sandbox` | درگاه پرداخت شبیه‌سازی‌شده |
+| `/checkout/result` | نتیجه پرداخت |
+| `/login` و `/register` | ورود و ثبت‌نام |
+
+### پنل کاربری
+
+`/account` · `/account/orders` · `/account/orders/[id]` · `/account/addresses` · `/account/wishlist` · `/account/reviews` · `/account/notifications` · `/account/wallet` · `/account/profile`
+
+### پنل مدیریت
+
+`/admin` · `/admin/orders` · `/admin/orders/[id]` · `/admin/products` · `/admin/products/new` · `/admin/products/[id]` · `/admin/categories` · `/admin/brands` · `/admin/inventory` · `/admin/coupons` · `/admin/banners` · `/admin/users` · `/admin/reviews` · `/admin/questions` · `/admin/messages` · `/admin/reports`
+
+### محتوایی و حقوقی
+
+`/about` · `/contact` · `/faq` · `/shipping` · `/returns` · `/terms` · `/privacy` · `/disclaimer` · `/sitemap` · `/careers` · `/partners` · `/affiliate`
+
+### API
+
+همه‌ی پاسخ‌ها یک پاکت استاندارد دارند:
+
+```jsonc
+// موفق
+{ "ok": true, "data": { /* ... */ } }
+
+// خطا
+{ "ok": false, "message": "پیام فارسی خطا" }
+```
+
+نمونه‌ی مسیرها: `/api/auth/*`، `/api/orders`، `/api/payments/verify`، `/api/coupons/validate`، `/api/account/*`، `/api/admin/*`، `/api/contact`، `/api/newsletter`، `/api/search/suggest`.
+
+---
+
+## معماری پروژه
+
+```
+sarva-shop/
+├─ prisma/
+│  ├─ schema.prisma          # مدل داده (کاربر، محصول، سفارش، پرداخت، ...)
+│  └─ seed.ts                # داده‌ی نمونه
+├─ scripts/
+│  └─ db-local.ts            # PostgreSQL تعبیه‌شده
+├─ src/
+│  ├─ app/
+│  │  ├─ (صفحات عمومی)
+│  │  ├─ account/            # پنل کاربری
+│  │  ├─ admin/              # پنل مدیریت
+│  │  └─ api/                # Route Handlers
+│  ├─ components/
+│  │  ├─ ui/                 # کیت رابط کاربری (Button, Input, Dialog, ...)
+│  │  ├─ layout/             # هدر و فوتر
+│  │  ├─ home/               # اجزای صفحه اصلی
+│  │  ├─ catalog/            # فیلترها، لیست و نوار ابزار
+│  │  ├─ product/            # گالری، پنل خرید، تب‌ها
+│  │  ├─ checkout/           # جریان تسویه و درگاه
+│  │  ├─ account/            # اجزای پنل کاربری
+│  │  ├─ admin/              # مدیران CRUD
+│  │  └─ content/            # اجزای صفحات محتوایی
+│  ├─ lib/
+│  │  ├─ auth.ts             # JWT، getSession، requireAdmin
+│  │  ├─ services/           # منطق دامنه (catalog, orders, coupons, auth)
+│  │  ├─ payment.ts          # انتزاع درگاه پرداخت
+│  │  ├─ shipping.ts         # محاسبه‌ی هزینه و روش‌های ارسال
+│  │  ├─ prisma.ts           # کلاینت Prisma
+│  │  ├─ validators.ts       # اسکیمای Zod
+│  │  └─ format.ts           # اعداد، قیمت و تاریخ فارسی/جلالی
+│  ├─ stores/                # Zustand (سبد، علاقه‌مندی، مقایسه، UI)
+│  ├─ types/                 # DTOها
+│  ├─ proxy.ts               # محافظت خوش‌بینانه از /account و /admin
+│  └─ app/globals.css        # توکن‌های طراحی Tailwind v4
+├─ next.config.ts            # لودر Tailwind برای Turbopack + تنظیمات تصاویر
+├─ prisma.config.ts
+└─ docker-compose.yml
+```
+
+### نکات فنی مهم
+
+- **Next.js 16**: `params` و `searchParams` در صفحات، Promise هستند؛ فایل `middleware` به `proxy` تغییر نام داده است.
+- **Tailwind v4** در این پروژه از طریق لودر `@tailwindcss/turbopack` در `next.config.ts` پردازش می‌شود.
+- **RTL سراسری**: `dir="rtl"` روی `<html>`، فونت وزیرمتن به‌صورت self-hosted.
+- **قیمت‌ها همیشه سمت سرور** از دیتابیس محاسبه می‌شوند؛ قیمت ارسالی از کلاینت هرگز مبنای سفارش نیست.
+- **DTOها** بین لایه‌ی داده و کامپوننت‌ها قرار می‌گیرند تا شکل داده پایدار بماند.
+
+---
+
+## جریان سفارش و پرداخت
+
+1. کاربر سبد خرید را می‌سازد (Zustand + localStorage).
+2. در `/checkout` آدرس، روش ارسال و روش پرداخت انتخاب می‌شود.
+3. `POST /api/orders` قیمت‌ها، موجودی، تخفیف و هزینه ارسال را **دوباره از دیتابیس** محاسبه می‌کند.
+4. موجودی رزرو می‌شود (`stock` کاهش، `reservedStock` افزایش).
+5. روش پرداخت:
+   - **آنلاین**: انتقال به درگاه sandbox؛ پس از تأیید، `POST /api/payments/verify` سفارش را نهایی می‌کند.
+   - **کیف پول**: فقط در صورت کافی بودن موجودی؛ سفارش بلافاصله نهایی می‌شود.
+   - **پرداخت در محل (COD)**: سفارش با وضعیت `PROCESSING` ثبت می‌شود.
+6. در پرداخت موفق: `reservedStock` کاهش و `soldCount` افزایش می‌یابد؛ کد تخفیف مصرف می‌شود.
+7. لغو سفارش: موجودی بازگردانده و استفاده از کد تخفیف آزاد می‌شود.
+8. تغییر وضعیت ادمین فقط از طریق گذارهای مجاز انجام می‌شود:
+
+```
+PENDING → CANCELED
+PAID → PROCESSING | CANCELED | REFUNDED
+PROCESSING → SHIPPED | CANCELED | REFUNDED
+SHIPPED → DELIVERED
+DELIVERED → REFUNDED
+```
+
+> درگاه پرداخت یک **شبیه‌ساز معماری‌واقعی** است: انتزاع provider، authority، verify، retry و fail. برای اتصال درگاه واقعی فقط `src/lib/payment.ts` و مسیرهای verify/retry را پیاده‌سازی کنید.
+
+---
+
+## امنیت
+
+- رمز عبور با `bcrypt` هش می‌شود.
+- نشست با **JWT امضاشده (HS256)** در کوکی `httpOnly` نگهداری می‌شود.
+- `getSession` کاربر را دوباره از دیتابیس می‌خواند تا غیرفعال‌سازی حساب فوراً اثر کند.
+- `requireAdmin` / `requireAdminPage` برای همه‌ی مسیرهای مدیریتی الزامی است.
+- `src/proxy.ts` فقط یک لایه‌ی خوش‌بینانه برای ریدایرکت سریع است؛ **مرجع نهایی احراز هویت، بررسی سمت سرور است**.
+- اعتبارسنجی ورودی‌ها با **Zod** در همه‌ی APIها.
+- محاسبه‌ی قیمت و موجودی فقط سمت سرور.
+- کوکی نشست در تولید باید `Secure` و در صورت نیاز `SameSite` سخت‌گیرانه‌تر داشته باشد (پشت HTTPS).
+
+---
+
+## توسعه‌ی بیشتر
+
+پروژه برای موارد زیر نقطه‌ی اتصال آماده دارد:
+
+- **چندفروشندگی**: افزودن مدل `Vendor` و رابطه‌ی آن با `Product` و `OrderItem`؛ لایه‌ی سرویس محصولات از قبل DTOمحور است.
+- **درگاه پرداخت واقعی**: پیاده‌سازی provider جدید در `src/lib/payment.ts`.
+- **شرکت حمل جدید**: افزودن یک `ShippingCarrier` در `src/lib/shipping.ts`.
+- **قواعد تخفیف پیشرفته**: توسعه‌ی `src/lib/services/coupons.ts`.
+- **اپ موبایل**: استفاده از همان APIهای JSON با پاکت استاندارد.
+- **جستجوی پیشرفته**: جایگزینی `contains` با PostgreSQL Full-Text Search یا سرویس جستجو.
+
+---
+
+## چک‌لیست انتشار
+
+- [ ] `AUTH_SECRET` را با یک مقدار تصادفی حداقل ۳۲ کاراکتری جایگزین کنید.
+- [ ] رمز ادمین seed را تغییر دهید و حساب‌های نمونه را حذف/غیرفعال کنید.
+- [ ] `NEXT_PUBLIC_SITE_URL` را روی دامنه‌ی واقعی تنظیم کنید.
+- [ ] دیتابیس تولیدی با بکاپ خودکار راه‌اندازی کنید.
+- [ ] HTTPS و کوکی `Secure` را فعال کنید.
+- [ ] `npm run typecheck` و `npm run build` را قبل از انتشار اجرا کنید.
+- [ ] درگاه پرداخت واقعی و webhook تأیید تراکنش را متصل کنید.
+- [ ] محدودیت نرخ (rate limiting) برای ورود، ثبت‌نام و APIهای عمومی اضافه کنید.
+- [ ] لاگ و مانیتورینگ خطا (مثل Sentry) را فعال کنید.
+- [ ] تصاویر واقعی محصولات را جایگزین SVGهای نمونه کنید.
+
+---
+
+## محدودیت‌های شناخته‌شده
+
+- درگاه پرداخت و ارسال، شبیه‌سازی‌شده اما با معماری قابل تعویض هستند.
+- جستجو در حال حاضر بر پایه‌ی `contains` است و برای کاتالوگ‌های بزرگ به ایندکس/سرویس جستجو نیاز دارد.
+- ارسال ایمیل (خبرنامه، بازیابی رمز) پیاده‌سازی نشده؛ فقط داده‌ها در دیتابیس ثبت می‌شوند.
+- آپلود فایل/تصویر از پنل مدیریت وجود ندارد؛ تصاویر از مسیر یا URL ثبت می‌شوند.
+- بازیابی رمز عبور از طریق ایمیل هنوز پیاده‌سازی نشده است.
+- داده‌ی نمونه و تصاویر، صرفاً برای نمایش و توسعه هستند.
+
+---
+
+ساخته‌شده با ❤️ برای تجربه‌ی خرید بهتر — **سَروا**
