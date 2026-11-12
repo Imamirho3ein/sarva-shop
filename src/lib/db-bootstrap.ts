@@ -10,15 +10,19 @@ import { prisma } from "./prisma";
  * این ماژول هنگام شروع سرور (instrumentation) در پس‌زمینه اجرا می‌شود و:
  *   ۱. اگر دیتابیس کاملاً خالی باشد → `prisma db push` و سپس `prisma db seed`
  *   ۲. اگر جدول‌ها باشند اما جدول Product نباشد → فقط `prisma db push`
- *   ۳. اگر فروشگاه آماده باشد → هیچ کاری نمی‌کند
+ *   ۳. اگر seed قبلی نصفه مانده باشد (محصولات کم و هیچ سفارشی ثبت نشده) → seed دوباره
+ *   ۴. اگر فروشگاه آماده باشد → هیچ کاری نمی‌کند
  *
- * هیچ‌وقت داده‌ی یک دیتابیس راه‌افتاده را پاک یا بازنویسی نمی‌کند و خطاها
- * فقط لاگ می‌شوند تا اجرای اپ متوقف نشود.
+ * هیچ‌وقت داده‌ی یک فروشگاه واقعی (دارای سفارش) را پاک یا بازنویسی نمی‌کند و
+ * خطاها فقط لاگ می‌شوند تا اجرای اپ متوقف نشود.
  *
  * غیرفعال‌سازی: متغیر محیطی `AUTO_DB_SETUP=0`
  */
 
-const COMMAND_TIMEOUT_MS = 180_000;
+const COMMAND_TIMEOUT_MS = 900_000;
+
+/** حداقل تعداد محصول برای اینکه نصب را «کامل» بدانیم. */
+const MIN_SEEDED_PRODUCTS = 10;
 let inFlight: Promise<void> | null = null;
 
 /** یک‌بار در طول عمر هر پروسه اجرا می‌شود. */
@@ -46,6 +50,13 @@ async function productTableExists(): Promise<boolean> {
     ) AS exists
   `;
   return rows[0]?.exists === true;
+}
+
+async function countRows(table: "Product" | "Order"): Promise<number> {
+  const rows = await prisma.$queryRawUnsafe<Array<{ count: number }>>(
+    `SELECT count(*)::int AS count FROM "${table}"`,
+  );
+  return Number(rows[0]?.count ?? 0);
 }
 
 function runPrisma(args: string[]): Promise<void> {
@@ -106,19 +117,37 @@ async function runBootstrap(): Promise<void> {
   }
 
   try {
-    if (await productTableExists()) return;
+    if (!(await productTableExists())) {
+      if (tables === 0) {
+        console.warn("[db-bootstrap] دیتابیس خالی است؛ ساخت جدول‌ها و درج داده‌ی نمونه…");
+        await runPrisma(["db", "push"]);
+        await runPrisma(["db", "seed"]);
+        console.log("[db-bootstrap] دیتابیس آماده شد (schema + seed).");
+        return;
+      }
 
-    if (tables === 0) {
-      console.warn("[db-bootstrap] دیتابیس خالی است؛ ساخت جدول‌ها و درج داده‌ی نمونه…");
+      console.warn("[db-bootstrap] جدول‌ها وجود دارند اما جدول Product نیست؛ اجرای prisma db push…");
       await runPrisma(["db", "push"]);
-      await runPrisma(["db", "seed"]);
-      console.log("[db-bootstrap] دیتابیس آماده شد (schema + seed).");
+      console.log("[db-bootstrap] schema با موفقیت همگام شد (بدون seed).");
       return;
     }
 
-    console.warn("[db-bootstrap] جدول‌ها وجود دارند اما جدول Product نیست؛ اجرای prisma db push…");
+    const [products, orders] = await Promise.all([countRows("Product"), countRows("Order")]);
+    if (products >= MIN_SEEDED_PRODUCTS) return;
+
+    if (orders > 0) {
+      console.warn(
+        `[db-bootstrap] فقط ${products} محصول ثبت شده اما ${orders} سفارش وجود دارد؛ برای جلوگیری از پاک شدن داده‌ها seed اجرا نشد.`,
+      );
+      return;
+    }
+
+    console.warn(
+      `[db-bootstrap] نصب ناقص است (${products} محصول، بدون سفارش)؛ اجرای مجدد seed…`,
+    );
     await runPrisma(["db", "push"]);
-    console.log("[db-bootstrap] schema با موفقیت همگام شد (بدون seed).");
+    await runPrisma(["db", "seed"]);
+    console.log("[db-bootstrap] نصب ناقص با موفقیت تکمیل شد.");
   } catch (error) {
     console.error("[db-bootstrap] آماده‌سازی خودکار دیتابیس ناموفق بود:", error);
   }
